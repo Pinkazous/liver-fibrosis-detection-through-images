@@ -31,6 +31,18 @@ IMG_MODEL_PATH = 'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep 
 TAB_MODEL_PATH = 'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/liver-fibrosis-detection-through-images/definite_binary_model.h5' # Tu modelo Keras
 SCALER_PATH =    'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/liver-fibrosis-detection-through-images/scaler.pkl'              # Tu escalador (StandardScaler/MinMaxScaler)
 
+# --- CONSTANTES ---
+MODEL_PATH = 'best_fibrosis_finaldensenet.pth' # Asegúrate que este sea el nombre correcto
+DEVICE = torch.device("cpu") 
+IMG_SIZE = 224
+LABELS = {
+    0: 'F0 (Sano)',
+    1: 'F1 (Fibrosis Leve)',
+    2: 'F2 (Fibrosis Moderada)',
+    3: 'F3 (Fibrosis Severa)',
+    4: 'F4 (Cirrosis)'
+}
+
 DEVICE = torch.device("cpu")
 
 # --- FUNCIONES DE CARGA ---
@@ -110,6 +122,7 @@ if modo == "Análisis de Imágenes":
         original_rgb = cv2.cvtColor(original_cv2, cv2.COLOR_BGR2RGB)
         
         img_model = load_image_model()
+
 
         # Botones de Acción
         col_btns1, col_btns2 = st.columns(2)
@@ -237,3 +250,11 @@ else:
                     st.download_button("Descargar Resultados", csv, "resultados.csv", "text/csv")
                     
                     
+
+        st.download_button(
+            label="⬇️ Descargar Análisis Grad-CAM",
+            data=byte_im,
+            file_name="diagnostico_gradcam.jpg",
+            mime="image/jpeg"
+        )
+
