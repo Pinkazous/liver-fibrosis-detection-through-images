@@ -27,12 +27,12 @@ st.set_page_config(
 )
 
 # --- RUTAS DE MODELOS ---
-IMG_MODEL_PATH = 'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/liver-fibrosis-detection-through-images/best_fibrosis_finaldensenet.pth'
-TAB_MODEL_PATH = 'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/liver-fibrosis-detection-through-images/definite_binary_model.h5' # Tu modelo Keras
-SCALER_PATH =    'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/liver-fibrosis-detection-through-images/scaler.pkl'              # Tu escalador (StandardScaler/MinMaxScaler)
+IMG_MODEL_PATH = 'best_fibrosis_finaldensenet.pth'
+TAB_MODEL_PATH = 'definite_binary_model.h5'
+SCALER_PATH =    'scaler.pkl' 
 
 # --- CONSTANTES ---
-MODEL_PATH = 'best_fibrosis_finaldensenet.pth' # Asegúrate que este sea el nombre correcto
+MODEL_PATH = 'best_fibrosis_finaldensenet.pth' 
 DEVICE = torch.device("cpu") 
 IMG_SIZE = 224
 LABELS = {
