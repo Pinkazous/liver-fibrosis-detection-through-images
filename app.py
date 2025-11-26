@@ -248,13 +248,3 @@ else:
                     st.dataframe(df)
                     csv = df.to_csv(index=False).encode('utf-8')
                     st.download_button("Descargar Resultados", csv, "resultados.csv", "text/csv")
-                    
-                    
-
-        st.download_button(
-            label="⬇️ Descargar Análisis Grad-CAM",
-            data=byte_im,
-            file_name="diagnostico_gradcam.jpg",
-            mime="image/jpeg"
-        )
-
