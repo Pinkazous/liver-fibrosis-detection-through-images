@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # --- CONSTANTES ---
-MODEL_PATH = 'C:/Users/pinka/OneDrive/Documentos/Uniandes/Analisis con Deep Learning/Proyecto_Final_Copy/best_fibrosis_finaldensenet.pth' # Asegúrate que este sea el nombre correcto
+MODEL_PATH = 'best_fibrosis_finaldensenet.pth' # Asegúrate que este sea el nombre correcto
 DEVICE = torch.device("cpu") 
 IMG_SIZE = 224
 LABELS = {
