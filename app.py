@@ -112,7 +112,8 @@ modo = st.sidebar.radio(
 if modo == "Análisis de Imágenes":
     # st.header("Detección de fibrosis hepática a través de imagenes")
     st.markdown("Modelo capaz de detectar patrones de imágenes de ultrasonido modo-B para clasificar estadios de fibrosis ($F0$ a $F4$).")
-    
+    st.caption("Por favor cargar una imagen de ultrasonido modo-B en formato .jpg o .png, a continuación pulsar el botón **Realizar predicción**")
+    st.caption("Para visualizar la región de interés detectada por el modelo pulsar el botón **Generar Mapa de Calor (Grad-CAM)**")
     uploaded_file = st.file_uploader("Cargar Imagen (.jpg, .png)", type=["jpg", "png", "jpeg"])
 
     if uploaded_file is not None:
@@ -196,55 +197,88 @@ if modo == "Análisis de Imágenes":
                 )
 
 # ==============================================================================
-# MODO 2: CLÍNICO (Igual que antes)
+# MODO 2: CLÍNICO
 # ==============================================================================
 else:
     
     st.markdown("Estimación de Riesgo por Parámetros Clínicos.")
-    # st.header("Estimación de Riesgo por Parámetros Clínicos")
     keras_model, scaler = load_clinical_model()
+    model_artifact=joblib.load('random_forest_artifact.joblib')
+    scaler=model_artifact.get('scaler')
+    model=model_artifact.get('model')
+    label_encoder=model_artifact.get('encoder')
     
-    if keras_model is None:
+    
+    
+    if model_artifact is None:
         st.error("Error cargando modelo clínico.")
     else:
         tab1, tab2 = st.tabs(["Ingreso Manual", "Carga Masiva"])
         
         with tab1:
-            c1, c2, c3, c4 = st.columns(4)
-            edad = c1.number_input("Edad", 1, 120, 45)
-            plaquetas = c2.number_input("Plaquetas", 1000, 600000, 250000)
-            ast = c3.number_input("AST", 1.0, value=30.0)
-            alt = c4.number_input("ALT", 1.0, value=30.0)
-            
-            c5, c6, c7, c8 = st.columns(4)
-            fal = c5.number_input("Fosfatasa Alcalina", 1.0, value=80.0)
-            inr = c6.number_input("INR", 0.5, 5.0, 1.0)
-            bt = c7.number_input("Bilirrubina Total", 0.1, value=1.0)
-            bd = c8.number_input("Bilirrubina Directa", 0.0, value=0.3)
-            
-            if st.button("Calcular Riesgo"):
-                input_data = np.array([[edad, plaquetas, ast, alt, fal, inr, bt, bd]])
-                if scaler: input_data = scaler.transform(input_data)
-                pred = keras_model.predict(input_data)
-                result = np.argmax(pred, axis=1)[0]
-                if result == 0:
-                    clase = "(F0-F2) Bajo Riesgo de Fibrosis"
+            st.markdown("Por favor introducir los siguientes valores y a continuación pulsar el botón **predecir riesgo**")
+            st.caption("BILIRRUBINA DIRECTA, BILIRRUBINA INDIRECTA, BILIRRUBINA TOTAL, LDH, FOSFATASA ALCALINA, (GGT), INR, PLAQUETAS, (TGO-AST), (TGP-ALT) ")
+           
+            c1, c2, c3, c4, c5, c6, c7, c8, c9, c10 = st.columns(10)
+            BD = c1.number_input('B.DIRECT',width =100,value=0.1)
+            BI = c2.number_input("B.INDIRECT", width =100,value=0.6)
+            BT = c3.number_input("B.TOTAL", width =100,value=0.7)
+            LDH = c4.number_input("LDH", width =100,value=369)
+            FA = c5.number_input("FOSF.ALC",width =100,value=85)
+            GGT = c6.number_input("GGT", width =100,value=36)
+            INR = c7.number_input("INR", width =100,value=1.07)
+            PL = c8.number_input("PLAQUETAS", width =100,value=336)
+            TGO_AST = c9.number_input("TGO-AST", width =100,value=28)
+            TGP_ALT = c10.number_input("TGP-ALT",width =100,value=19)
+                        
+            # --------------Predecir-----------------------
+            if st.button("Predecir Riesgo"):
+                input_data = np.array([[BD, BI, BT, LDH, FA,GGT,INR,PL,TGO_AST,TGP_ALT]])
+                scaled_data_=scaler.transform(input_data)
+                predicted_val=model.predict(scaled_data_)
+                if hasattr(predicted_val, "ndim") and predicted_val.ndim > 1:
+                    predicted_idx = np.argmax(predicted_val, axis=1)
                 else:
-                    clase = "(F3-F4) Alto Riesgo de Fibrosis"
-                print(clase)
-                st.metric("Estadio Predicho", clase)
+                    predicted_idx = np.array(predicted_val).astype(int)
+                    
+                # Usar inverse_transform para obtener etiquetas originales
+                predicted_label = label_encoder.inverse_transform(predicted_idx)
+                st.session_state['pred_result_'] = predicted_label[0]
+                if 'pred_result_' in st.session_state:
+                    st.success(f"Diagnóstico: **{st.session_state['pred_result_']}**")
+                    st.divider()
                 
         with tab2:
-            uploaded_csv = st.file_uploader("Cargar CSV", type=["csv"])
+            st.caption("**IMPORTANTE** El archivo que se cargue debe tener las siguientes columnas:")
+            st.caption("BILIRRUBINA DIRECTA, BILIRRUBINA INDIRECTA, BILIRRUBINA TOTAL, LDH, FOSFATASA ALCALINA, (GGT), INR, PLAQUETAS, (TGO-AST), (TGP-ALT) ")
+            uploaded_csv = st.file_uploader("tipo CSV:", type=["csv"])
             if uploaded_csv:
                 df = pd.read_csv(uploaded_csv)
-                required = ['Edad', 'Plaquetas', 'AST', 'ALT', 'Fosfatasa Alcalina', 'INR', 'Bilirrubina Total', 'Bilirrubina Directa']
+                required = ['BILIRRUBINA DIRECTA',
+                            'BILIRRUBINA INDIRECTA',
+                            'BILIRRUBINA TOTAL',
+                            'LDH',
+                            'FOSFATASA ALCALINA',
+                            '(GGT)',
+                            'INR',
+                            'PLAQUETAS',
+                            '(TGO-AST)',
+                            '(TGP-ALT)']
                 if st.button("Predecir"):
                     data = df[required].values
-                    if scaler: data = scaler.transform(data)
-                    preds = keras_model.predict(data)
-                    df['Prediccion'] = [LABELS_tabular[np.argmax(p)] for p in preds]
-                    # [if (np.argmax(prediction, axis=1)) > 0 else "(F0-F2) Bajo Riesgo de Fibrosis"]
+                    scaled_data_=scaler.transform(data)
+                    predicted_val=model.predict(scaled_data_)
+                    if hasattr(predicted_val, "ndim") and predicted_val.ndim > 1:
+                        predicted_idx = np.argmax(predicted_val, axis=1)
+                    else:
+                        predicted_idx = np.array(predicted_val).astype(int)
+                    
+                    # Usar inverse_transform para obtener etiquetas originales
+                    predicted_label = label_encoder.inverse_transform(predicted_idx)
+                    
+                    df['Prediccion'] = predicted_label
+                    
                     st.dataframe(df)
                     csv = df.to_csv(index=False).encode('utf-8')
                     st.download_button("Descargar Resultados", csv, "resultados.csv", "text/csv")
+
